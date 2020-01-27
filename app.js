@@ -7,6 +7,10 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+var appInsights = require("applicationinsights");
+appInsights.setup('6aacd601-44c9-46b4-b828-bdda812330e1');
+appInsights.start();
+
 var app = express();
 
 // view engine setup
@@ -21,7 +25,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
+app.use('/problem', function(){
+  throw new Error("Oops! Something went wrong!")
+});
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
@@ -32,7 +38,7 @@ app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
+  appInsights.defaultClient.trackException({exception : err});
   // render the error page
   res.status(err.status || 500);
   res.render('error');
